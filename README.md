@@ -73,7 +73,8 @@ public class DezOuVintePorCento implements RegraDeCalculo {
     DESENVOLVEDOR(new DezOuVintePorCento()),
     DBA(new DezOuVintePorCento()),
     TESTER(new QuinzeOuVinteECincoPorCento());
-
+    
+    private RegraDeCalcula regra;
     Cargo(RegraDeCalculo regra)  {
         this.regra = regra;
     }
