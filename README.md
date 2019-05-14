@@ -102,3 +102,64 @@ public double calculaSalario()  {
     return  cargo.getRegra().calcula(this);
 }
 ```
+### Acoplamento e a Estabilidade
+Esse princípio nos mostra o quanto é ruim/perigoso depender de classes instáveis. A solução para isso é tentar ao máximo evitar dependência com classes instáveis, dependendo de *interface* por exemplo. Segue uma imagem de classe ruim:
+``` java
+public class GeradorDeNotaFiscal {
+
+    private final EnviadorDeEmail email;
+    private final NotaFiscalDao dao;
+
+    public GeradorDeNotaFiscal(EnviadorDeEmail email, NotaFiscalDao dao) {
+        this.email = email;
+        this.dao = dao;
+    }
+
+    public NotaFiscal gera(Fatura fatura) {
+
+        double valor = fatura.getValorMensal();
+
+        NotaFiscal nf = new NotaFiscal(valor, impostoSimplesSobreO(valor));
+
+        email.enviaEmail(nf);
+        dao.persiste(nf);
+
+        return nf;
+    }
+
+    private double impostoSimplesSobreO(double valor) {
+        return valor * 0.06;
+    }
+}
+```
+Percebemos aqui que tem responsabilidade de gerar fatura depende também de enviar e-mail e salvar uma notaFiscal. Porém dependência não é possível evitar 100%. Então devemos depender de coisas mais estáveis, como interface por exemplo:
+``` java
+public class NotaFiscalDao implements AcaoAposGerarNota  {
+    public void executa(NotaFiscal nf)  {
+        System.out.println("salva nf no banco");
+    }
+}
+
+public class EnviadorDeEmail implements AcaoAposGerarNota  {
+
+    public void executa(NotaFiscal nf)  {
+         System.out.println("Envia e-mail");
+    }
+}
+
+public class GeradorDeNotaFiscal  {
+    private List<AcaoAposGerarNota>  acoes;
+    public GeradorDeNotaFiscal(List<AcaoAposGerarNota>  acoes)  {
+        this.acoes = acoes;
+    }
+    public NotaFiscal gera(Fatura fatura)  { 
+        double valor = fatura.getValorMensal();
+        NotaFiscal nf = new NotaFiscal(valor , impostoSimplesSobre0(valor));
+       
+       for(AcaoAposGerarNota acao  :  acoes)  {`
+            acao.executa(nf);
+        }
+        return nf;
+}
+```
+A diferença aqui é que agora dependemos de interfaces (que são mais estáveis) que por possuir mais de uma implementação irá fazer o próximo desenvolvedor pensar mais antes de muda-la.
